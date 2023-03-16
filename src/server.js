@@ -1,24 +1,77 @@
 import http from "http";
-import fs from "fs/promises";
-// import { PORT } from "./Common/config";
-const PORT = 8080;
+import fs from "fs";
+import path from "path";
+import dotenv from "dotenv";
+import { PORT } from "./Common/config.js";
+import { chatgptService } from "./Chatgpt/chatgpt.service.js";
 
-const startServer = async function () {
-  try {
-    const htmlPage = await fs.readFile("public/index.html");
+dotenv.config();
 
-    const server = await http.createServer((_, response) => {
-      response.writeHeader(200, { "Content-Type": "javascript" });
-      response.write(htmlPage);
-      response.end();
+const server = http.createServer(async (req, res) => {
+  if (req.url === "/chat" && req.method === "POST") {
+    let data = "";
+
+    req.on("data", (chunk) => {
+      data += chunk;
     });
 
-    server.listen(PORT, () => {
-      console.log(`server started on port: ${PORT}`);
+    req.on("end", async () => {
+      const parsedData = JSON.parse(data);
+      const response = await chatgptService.makeRequest(parsedData.prompt);
+      res.setHeader("Content-Type", "application/json");
+      res.write(JSON.stringify(response));
+      res.end();
     });
-  } catch (error) {
-    console.error(error);
+
+    return;
   }
-};
 
-startServer();
+  let filePath = "." + req.url;
+  if (filePath === "./") {
+    filePath = "./public/index.html";
+  } else {
+    filePath = path.join(process.cwd(), filePath);
+  }
+  const extname = path.extname(filePath);
+
+  let contentType = "text/html";
+  switch (extname) {
+    case ".js":
+      contentType = "text/javascript";
+      break;
+    case ".css":
+      contentType = "text/css";
+      break;
+    case ".json":
+      contentType = "application/json";
+      break;
+    case ".png":
+      contentType = "image/png";
+      break;
+    case ".jpg":
+      contentType = "image/jpg";
+      break;
+    case ".wav":
+      contentType = "audio/wav";
+      break;
+  }
+
+  fs.readFile(filePath, (error, content) => {
+    if (error) {
+      if (error.code == "ENOENT") {
+        res.writeHead(404);
+        res.end("404 File Not Found");
+      } else {
+        res.writeHead(500);
+        res.end("500 Internal Server Error");
+      }
+    } else {
+      res.writeHead(200, { "Content-Type": contentType });
+      res.end(content, "utf-8");
+    }
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

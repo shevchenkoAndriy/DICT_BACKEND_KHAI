@@ -5,62 +5,9 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="public/index.css">
     <title>ChatGPT</title>
-    <style>
-        * {
-            margin: 0px;
-            padding: 0px;
-            box-sizing: border-box;
-            list-style: none;
-        }
 
-        .container {
-            margin: 0px auto;
-            width: 300px;
-            padding: 0px 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .chatgpt-list {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-self: flex-start;
-        }
-
-        .chatgpt-list>li {
-            margin-top: 20px;
-        }
-
-        .chatgpt-form {
-            width: 280px;
-            display: flex;
-            margin-top: 50px;
-        }
-
-        .chatgpt-form__input {
-            width: 100%;
-            padding: 5px 10px;
-        }
-
-        .chatgpt-form__btn {
-            padding: 5px;
-        }
-
-        @media screen and (min-width: 768px) {
-            .container {
-                width: 600px;
-            }
-
-            .chatgpt-form {
-                width: 580px;
-            }
-        }
-
-    </style>
 </head>
 
 <body>
@@ -76,58 +23,8 @@
     </div>
 
 
-    <script type="text/javascript">
-        const refs = {
-            chatGpt: document.getElementById("chatgpt"),
-            chatGptForm: document.getElementById("chatgpt-form"),
-            prompt: document.getElementById("prompt"),
-        }
+    <script type="module" src="public/index.js">
 
-        refs.chatGptForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const currentPrompt = refs.prompt.value;
-            const userPrompt = document.createElement("li");
-
-            userPrompt.textContent = currentPrompt;
-            refs.chatGpt.appendChild(userPrompt);
-            refs.prompt.value = ""
-
-            const skeleton = document.createElement("li")
-            skeleton.textContent = "...typing"
-            refs.chatGpt.appendChild(skeleton);
-
-            const headers = {
-                "Content-Type": 'application/json',
-                "Authorization": `Bearer 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`
-            }
-
-            const data = {
-                model: "gpt-3.5-turbo",
-                temperature: 0.8,
-                messages: [{ role: "user", content: currentPrompt }],
-            };
-
-            try {
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify(data),
-                });
-
-                const answer = await response.json()
-
-                const answerItem = document.createElement("li");
-                answerItem.textContent = answer.choices[0].message.content;
-
-                refs.chatGpt.appendChild(answerItem);
-
-            } catch (error) {
-                console.error(error);
-            }
-            finally {
-                refs.chatGpt.removeChild(skeleton)
-            }
-        });
     </script>
 </body>
 
